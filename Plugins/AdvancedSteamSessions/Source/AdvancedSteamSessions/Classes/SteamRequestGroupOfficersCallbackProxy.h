@@ -17,6 +17,8 @@
 
 #if PLATFORM_WINDOWS || PLATFORM_MAC || PLATFORM_LINUX
 
+#include "OnlineSubsystemSteam.h"
+
 #pragma push_macro("ARRAY_COUNT")
 #undef ARRAY_COUNT
 
@@ -53,7 +55,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Online|SteamAPI|SteamGroups")
 		FBPUniqueNetId OfficerUniqueNetID; // Uint64 representation
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Online|SteamAPI|SteamGroups")
-	bool bIsOwner;
+		bool bIsOwner = false;
 
 };
 

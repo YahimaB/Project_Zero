@@ -1,17 +1,18 @@
 #pragma once
 #include "CoreMinimal.h"
-#include "EngineMinimal.h"
+//#include "EngineMinimal.h"
 #include "Engine/Engine.h"
 #include "GameFramework/PlayerState.h"
-#include "Core.h"
-#include "OnlineSessionInterface.h"
+//#include "Core.h"
+#include "Interfaces/OnlineSessionInterface.h"
 #include "OnlineSessionSettings.h"
 #include "OnlineDelegateMacros.h"
 #include "OnlineSubsystem.h"
 #include "OnlineSubsystemImpl.h"
 #include "OnlineSubsystemUtils.h"
 #include "OnlineSubsystemUtilsModule.h"
-#include "ModuleManager.h"
+#include "GameFramework/PlayerController.h"
+#include "Modules/ModuleManager.h"
 #include "OnlineSubsystemUtilsClasses.h"
 #include "BlueprintDataDefinitions.generated.h"	
 
@@ -199,6 +200,17 @@ public:
 			return nullptr;
 	}
 
+	// Adding in a compare operator so that std functions will work with this struct
+	FORCEINLINE bool operator==(const FBPUniqueNetId& Other) const
+	{
+		return (IsValid() && Other.IsValid() && (*GetUniqueNetId() == *Other.GetUniqueNetId()));
+	}
+
+	FORCEINLINE bool operator!=(const FBPUniqueNetId& Other) const
+	{
+		return !(IsValid() && Other.IsValid() && (*GetUniqueNetId() == *Other.GetUniqueNetId()));
+	}
+
 	FBPUniqueNetId()
 	{
 		bUseDirectPointer = false;
@@ -239,22 +251,30 @@ struct FBPFriendPresenceInfo
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Online|Friend")
-		bool bIsOnline;
+		bool bIsOnline = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Online|Friend")
-		bool bIsPlaying;
+		bool bIsPlaying = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Online|Friend")
-		bool bIsPlayingThisGame;
+		bool bIsPlayingThisGame = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Online|Friend")
-		bool bIsJoinable;
+		bool bIsJoinable = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Online|Friend")
-		bool bHasVoiceSupport;
+		bool bHasVoiceSupport = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Online|Friend")
-		EBPOnlinePresenceState PresenceState;
+		EBPOnlinePresenceState PresenceState = EBPOnlinePresenceState::Offline;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Online|Friend")
 		FString StatusString;
+
+	FBPFriendPresenceInfo()
+	{
+		bIsOnline = false;
+		bIsPlaying = false;
+		bIsPlayingThisGame = false;
+		bIsJoinable = false;
+		bHasVoiceSupport = false;
+		PresenceState = EBPOnlinePresenceState::Offline;
+	}
 };
-
-
 
 USTRUCT(BlueprintType)
 struct FBPFriendInfo
@@ -268,14 +288,21 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Online|Friend")
 	FString RealName;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Online|Friend")
-	EBPOnlinePresenceState OnlineState;
+	EBPOnlinePresenceState OnlineState = EBPOnlinePresenceState::Offline;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Online|Friend")
 	FBPUniqueNetId UniqueNetId;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Online|Friend")
-	bool bIsPlayingSameGame;
+	bool bIsPlayingSameGame = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Online|Friend")
 	FBPFriendPresenceInfo PresenceInfo;
+
+	FBPFriendInfo()
+	{
+		OnlineState = EBPOnlinePresenceState::Offline;
+		bIsPlayingSameGame = false;
+	}
 };
+
 
 /** The types of comparison operations for a given search query */
 // Used to compare session properties
@@ -339,7 +366,7 @@ public:
 		//return const_cast<FUniqueNetId*>(UniqueNetIdPtr);
 		if (APlayerState* PlayerState = (PlayerController != NULL) ? PlayerController->PlayerState : NULL)
 		{
-			UserID = PlayerState->UniqueId.GetUniqueNetId();
+			UserID = PlayerState->GetUniqueId().GetUniqueNetId();
 			if (!UserID.IsValid())
 			{
 				FFrame::KismetExecutionMessage(*FString::Printf(TEXT("%s - Cannot map local player to unique net ID"), FunctionContext), ELogVerbosity::Warning);
